@@ -1,6 +1,7 @@
 package com.company;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -8,13 +9,15 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        String filePath = "/Users/imhyojin/Downloads/ApiLogAnalyzer/src/com/company/input.log";
+        String filePath = "./src/com/company/input.log";
         analyzeLog(filePath);
     }
 
     private static void analyzeLog(String filePath) {
         try {
             List<String> lines = Files.readAllLines(Paths.get(filePath));
+            PrintStream fileOut = new PrintStream("./src/com/company/output.txt");
+            System.setOut(fileOut);
 
             Map<String, Integer> apiKeyCounts = new HashMap<>();
             Map<String, Integer> serviceIdCounts = new HashMap<>();
@@ -60,10 +63,16 @@ public class Main {
             System.out.println("\n웹브라우저별 사용 비율");
             // 웹브라우저 사용 비율 출력
             int totalBrowserUsage = browserCounts.values().stream().mapToInt(Integer::intValue).sum();
-            browsers.forEach(browser -> {
-                double percentage = 100.0 * browserCounts.getOrDefault(browser, 0) / totalBrowserUsage;
-                System.out.printf("%s : %.0f%%\n", browser, percentage);
-            });
+
+            browserCounts.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()) // 내림차순 정렬
+                    .forEach(entry -> {
+                        String browser = entry.getKey();
+                        int count = entry.getValue();
+                        double percentage = 100.0 * count / totalBrowserUsage;
+                        System.out.printf("%s : %.0f%%\n", browser, percentage);
+                    });
+            fileOut.close();
 
         } catch (IOException e) {
             e.printStackTrace();
